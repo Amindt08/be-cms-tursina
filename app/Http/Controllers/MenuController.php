@@ -80,7 +80,6 @@ class MenuController extends Controller
                 'message' => 'Menu berhasil ditambahkan',
                 'data' => $menu
             ], 201);
-
         } catch (\Exception $e) {
             Log::error("Error store menu: " . $e->getMessage());
 
@@ -93,62 +92,26 @@ class MenuController extends Controller
 
     public function update(Request $request, $id)
     {
-        Log::info("Request update menu:", $request->all());
+        $menu = Menu::findOrFail($id);
 
-        try {
-            $validated = $request->validate([
-                'menu_name' => 'required|string',
-                'details' => 'required|string',
-                'price' => 'required|numeric',
-                'category' => 'required|string',
-                'status' => 'required|string',
-                'image' => 'nullable'
-            ]);
+        $menu->menu_name = $request->menu_name;
+        $menu->details = $request->details;
+        $menu->price = $request->price;
+        $menu->category = $request->category;
+        $menu->status = $request->status;
 
-            $menu = Menu::findOrFail($id);
-
-            // Jika hanya dikirim nama file (string)
-            if ($request->image && !$request->hasFile('image')) {
-                $menu->image = $request->image;
-            }
-
-            // Jika upload file baru
-            if ($request->hasFile('image')) {
-
-                // Hapus file lama jika ada
-                if ($menu->image && file_exists(public_path('images/menu/' . $menu->image))) {
-                    unlink(public_path('images/menu/' . $menu->image));
-                }
-
-                $image = $request->file('image');
-                $filename = Str::random(20) . '.' . $image->getClientOriginalExtension();
-                $image->move(public_path('images/menu'), $filename);
-                $menu->image = $filename;
-            }
-
-            // Simpan update data
-            $menu->menu_name = $validated['menu_name'];
-            $menu->details = $validated['details'];
-            $menu->price = $validated['price'];
-            $menu->category = $validated['category'];
-            $menu->status = $validated['status'];
-
-            $menu->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Menu berhasil diperbarui',
-                'data' => $menu
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Error update menu: " . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Gagal memperbarui menu'
-            ], 500);
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('images/menu'), $filename);
+            $menu->image = "/images/menu/" . $filename;
         }
+
+        $menu->save();
+
+        return response()->json(['success' => true, 'data' => $menu]);
     }
+
 
     public function destroy($id)
     {

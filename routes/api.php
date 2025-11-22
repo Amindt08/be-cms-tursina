@@ -19,6 +19,11 @@ Route::get('/user', function (Request $request) {
 Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::apiResource('menu', MenuController::class);
+Route::get('/menu-images/{filename}', function ($filename) {
+    $path = public_path('images/menu/' . $filename);
+    return response()->file($path);
+});
+
 Route::apiResource('promo', PromoController::class);
 Route::apiResource('karir', CareerController::class);
 Route::apiResource('member', MemberController::class);
