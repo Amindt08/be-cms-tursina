@@ -50,14 +50,11 @@ class UserController extends Controller
 
   public function store(Request $request)
   {
-    Log::info("Request store user:", $request->all());
-
     try {
       $validator = Validator::make($request->all(), [
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email',
-        'role' => 'required|in:admin,user,staff',
-        'password' => 'required|string|min:6',
+        'role' => 'required|in:Admin,Superadmin,Membership',
         'status' => 'required|in:active,inactive'
       ]);
 
@@ -69,18 +66,21 @@ class UserController extends Controller
         ], 422);
       }
 
+      // Convert role dari Frontend ke DB
+      $role = strtolower($request->role);
+
       $user = new Users();
       $user->name = $request->name;
       $user->email = $request->email;
-      $user->role = $request->role;
-      $user->password = Hash::make($request->password);
+      $user->role = $role;
       $user->status = $request->status;
+      $user->password = Hash::make('123'); // Password default
+
       $user->save();
 
-      Log::info('User berhasil dibuat: ' . $user->id);
       return response()->json([
         'success' => true,
-        'message' => "User berhasil dibuat",
+        'message' => "User berhasil dibuat dengan password default '123'",
         'data' => [
           'id' => $user->id,
           'name' => $user->name,
@@ -102,13 +102,11 @@ class UserController extends Controller
   {
     try {
       $user = Users::findOrFail($id);
-      Log::info("Updating user with ID: $id");
 
       $validator = Validator::make($request->all(), [
         'name' => 'sometimes|required|string|max:255',
         'email' => 'sometimes|required|email|unique:users,email,' . $id,
-        'role' => 'sometimes|required|in:admin,user,staff',
-        'password' => 'sometimes|nullable|string|min:6',
+        'role' => 'sometimes|required|in:Admin,Superadmin,Membership',
         'status' => 'sometimes|required|in:active,inactive'
       ]);
 
@@ -120,38 +118,34 @@ class UserController extends Controller
         ], 422);
       }
 
+      // Update hanya field yang ada di request
+      $updateData = [];
       if ($request->has('name')) {
-        $user->name = $request->name;
+        $updateData['name'] = $request->name;
       }
-
       if ($request->has('email')) {
-        $user->email = $request->email;
+        $updateData['email'] = $request->email;
       }
-
       if ($request->has('role')) {
-        $user->role = $request->role;
+        $updateData['role'] = strtolower($request->role);
       }
-
       if ($request->has('status')) {
-        $user->status = $request->status;
+        $updateData['status'] = $request->status;
       }
 
-      if ($request->filled('password')) {
-        $user->password = Hash::make($request->password);
-      }
-
-      $user->save();
+      // Update user
+      $user->update($updateData);
 
       return response()->json([
         'success' => true,
+        'message' => 'User berhasil diperbarui',
         'data' => [
           'id' => $user->id,
           'name' => $user->name,
           'email' => $user->email,
           'role' => $user->role,
           'status' => $user->status
-        ],
-        'message' => 'User berhasil diperbarui'
+        ]
       ]);
     } catch (\Exception $e) {
       Log::error("Update user failed: " . $e->getMessage());
@@ -162,6 +156,7 @@ class UserController extends Controller
     }
   }
 
+  // ... method lainnya tetap sama
   public function destroy($id)
   {
     try {
@@ -185,6 +180,7 @@ class UserController extends Controller
   public function updateStatus(Request $request, $id)
   {
     try {
+
       $validator = Validator::make($request->all(), [
         'status' => 'required|in:active,inactive'
       ]);
@@ -214,6 +210,79 @@ class UserController extends Controller
       return response()->json([
         'success' => false,
         'error' => 'Gagal mengupdate status user'
+      ], 500);
+    }
+  }
+
+  public function changePassword(Request $request)
+  {
+    try {
+      Log::info($request->all());
+      $validator = Validator::make($request->all(), [
+        'current_password' => 'required|string',
+        'new_password' => 'required|string|min:6',
+        'confirm_password' => 'required|string|same:new_password'
+      ]);
+
+      if ($validator->fails()) {
+        return response()->json([
+          'success' => false,
+          'error' => 'Validasi gagal',
+          'errors' => $validator->errors()
+        ], 422);
+      }
+
+      // Get user ID from token
+      $token = $request->bearerToken();
+      if (!$token) {
+        return response()->json([
+          'success' => false,
+          'error' => 'Token tidak ditemukan'
+        ], 401);
+      }
+
+      // Decode token to get user ID
+      $decodedToken = base64_decode($token);
+      $tokenData = json_decode($decodedToken, true);
+
+      if (!isset($tokenData['id'])) {
+        return response()->json([
+          'success' => false,
+          'error' => 'Token tidak valid'
+        ], 401);
+      }
+
+      $userId = $tokenData['id'];
+      $user = Users::find($userId);
+
+      if (!$user) {
+        return response()->json([
+          'success' => false,
+          'error' => 'User tidak ditemukan'
+        ], 404);
+      }
+
+      // Check current password
+      if (!Hash::check($request->current_password, $user->password)) {
+        return response()->json([
+          'success' => false,
+          'error' => 'Password saat ini salah'
+        ], 422);
+      }
+
+      // Update password
+      $user->password = Hash::make($request->new_password);
+      $user->save();
+
+      return response()->json([
+        'success' => true,
+        'message' => 'Password berhasil diubah'
+      ]);
+    } catch (\Exception $e) {
+      Log::error("Change password failed: " . $e->getMessage());
+      return response()->json([
+        'success' => false,
+        'error' => 'Gagal mengubah password'
       ], 500);
     }
   }

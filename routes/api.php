@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CareerController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OutletController;
@@ -16,6 +17,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+
 Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::apiResource('menu', MenuController::class);
@@ -29,4 +31,9 @@ Route::apiResource('karir', CareerController::class);
 Route::apiResource('member', MemberController::class);
 Route::apiResource('outlet', OutletController::class);
 Route::apiResource('user', UserController::class);
-
+Route::apiResource('galeri', GalleryController::class);
+// Routes untuk membership points
+Route::post('/members/{id}/add-points', [MemberController::class, 'addPoints']);
+Route::post('/members/{id}/redeem-points', [MemberController::class, 'redeemPoints']);
+Route::post('/members/{id}/reset-points', [MemberController::class, 'resetPoints']);
+Route::get('/members/{id}/points-history', [MemberController::class, 'getPointsHistory']);
