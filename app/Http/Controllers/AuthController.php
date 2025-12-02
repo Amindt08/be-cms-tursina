@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Users;
@@ -48,10 +47,12 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $token = base64_encode(json_encode([
-                'id' => $user->id,
-                'time' => time()
-            ]));
+            // ✅ GUNAKAN SANCTUM untuk generate token
+            // Hapus token lama jika ada
+            $user->tokens()->delete();
+            
+            // Generate token baru
+            $token = $user->createToken('auth-token')->plainTextToken;
 
             return response()->json([
                 'success' => true,
@@ -61,7 +62,7 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
-                    'token' => $token
+                    'token' => $token  // Token Sanctum
                 ]
             ]);
 
@@ -75,9 +76,21 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Hapus token saat logout
+        $request->user()->currentAccessToken()->delete();
+
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil'
+        ]);
+    }
+
+    // Method untuk get user profile
+    public function profile(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $request->user()
         ]);
     }
 }

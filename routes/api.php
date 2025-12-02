@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CareerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MenuController;
@@ -38,3 +39,6 @@ Route::post('/members/{id}/add-points', [MemberController::class, 'addPoints']);
 Route::post('/members/{id}/redeem-points', [MemberController::class, 'redeemPoints']);
 Route::post('/members/{id}/reset-points', [MemberController::class, 'resetPoints']);
 Route::get('/members/{id}/points-history', [MemberController::class, 'getPointsHistory']);
+Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+Route::get('/dashboard/top-members', [DashboardController::class, 'getTopMembers']);
+Route::get('/dashboard/daily-visits', [DashboardController::class, 'getDailyVisits']);

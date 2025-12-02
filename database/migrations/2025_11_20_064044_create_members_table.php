@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('no_wa');
             $table->string('outlet');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

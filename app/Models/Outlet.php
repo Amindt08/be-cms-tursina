@@ -12,5 +12,6 @@ class Outlet extends Model
   protected $fillable = [
     'location',
     'link',
+    'is_active'
   ];
 }

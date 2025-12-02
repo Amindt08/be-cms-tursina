@@ -42,8 +42,10 @@ class OutletController extends Controller
     try {
       $validated = $request->validate([
         'location' => 'required|string|max:255',
-        'link'     => 'required|url'
+        'link'     => 'required|url',
+        'is_active' => 'required'
       ]);
+      $validated['is_active'] = $this->convertToInteger($validated['is_active']);
 
       $outlet = Outlet::create($validated);
 
@@ -69,8 +71,10 @@ class OutletController extends Controller
     try {
       $validated = $request->validate([
         'location' => 'required|string|max:255',
-        'link'     => 'required|url'
+        'link'     => 'required|url',
+        'is_active' => 'required'
       ]);
+      $validated['is_active'] = $this->convertToInteger($validated['is_active']);
 
       $outlet = Outlet::findOrFail($id);
       $outlet->update($validated);
@@ -106,5 +110,22 @@ class OutletController extends Controller
         'error' => 'Gagal menghapus outlet'
       ], 500);
     }
+  }
+  private function convertToInteger($value): int
+  {
+    if (is_bool($value)) {
+      return $value ? 1 : 0;
+    }
+
+    if (is_string($value)) {
+      // Handle '1', '0', 'true', 'false'
+      return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+    }
+
+    if (is_numeric($value)) {
+      return (int) $value;
+    }
+
+    return 0; // Default
   }
 }

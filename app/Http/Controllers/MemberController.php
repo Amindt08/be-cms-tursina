@@ -58,11 +58,11 @@ class MemberController extends Controller
   {
     // Ambil huruf depan outlet location (uppercase)
     $outletInitial = strtoupper(substr($outletLocation, 0, 3));
-    
+
     // Cari member terakhir dengan outlet yang sama
     $lastMember = Member::where('member_code', 'like', $outletInitial . '-%')
-        ->orderBy('member_code', 'desc')
-        ->first();
+      ->orderBy('member_code', 'desc')
+      ->first();
 
     if ($lastMember) {
       // Extract number and increment
@@ -88,14 +88,16 @@ class MemberController extends Controller
         'outlet_id'   => 'required|exists:outlets,id',
         'points'      => 'sometimes|integer|min:0',
         'total_points_earned' => 'sometimes|integer|min:0',
-        'total_points_redeemed' => 'sometimes|integer|min:0'
+        'total_points_redeemed' => 'sometimes|integer|min:0',
+        'is_active'  => 'sometimes'
       ]);
+      $validated['is_active'] = $this->convertToInteger($validated['is_active']);
 
       DB::beginTransaction();
 
       // Get outlet data
       $outlet = Outlet::findOrFail($validated['outlet_id']);
-      
+
       // Generate member_code menggunakan location
       $memberCode = $this->generateMemberCode($outlet->location);
 
@@ -142,14 +144,16 @@ class MemberController extends Controller
         'outlet_id'   => 'required|exists:outlets,id',
         'points'      => 'sometimes|integer|min:0',
         'total_points_earned' => 'sometimes|integer|min:0',
-        'total_points_redeemed' => 'sometimes|integer|min:0'
+        'total_points_redeemed' => 'sometimes|integer|min:0',
+        'is_active'  => 'sometimes'
       ]);
+      $validated['is_active'] = $this->convertToInteger($validated['is_active']);
 
       DB::beginTransaction();
 
       // Get outlet data
       $outlet = Outlet::findOrFail($validated['outlet_id']);
-      
+
       // Generate member_code baru jika outlet berubah
       if ($member->outlet_id != $validated['outlet_id']) {
         $memberCode = $this->generateMemberCode($outlet->location);
@@ -319,7 +323,7 @@ class MemberController extends Controller
       DB::beginTransaction();
 
       $oldPoints = $member->points;
-      
+
       $member->points = 0;
       $member->save();
 
@@ -370,5 +374,23 @@ class MemberController extends Controller
         'error' => 'Gagal mengambil history points'
       ], 500);
     }
+  }
+
+  private function convertToInteger($value): int
+  {
+    if (is_bool($value)) {
+      return $value ? 1 : 0;
+    }
+
+    if (is_string($value)) {
+      // Handle '1', '0', 'true', 'false'
+      return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+    }
+
+    if (is_numeric($value)) {
+      return (int) $value;
+    }
+
+    return 0; // Default
   }
 }

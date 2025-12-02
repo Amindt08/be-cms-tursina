@@ -18,7 +18,8 @@ class Member extends Model
         'outlet_id',
         'points',
         'total_points_earned',
-        'total_points_redeemed'
+        'total_points_redeemed',
+        'is_active'
     ];
 
     protected $attributes = [
