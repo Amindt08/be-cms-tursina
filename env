@@ -1,8 +1,8 @@
-APP_NAME=Laravel
-APP_ENV=local
+APP_NAME=Tursina Kebab API
+APP_ENV=production
 APP_KEY=base64:B5khFnjWJA2XKLTNuvGIp/YvRCqPatsGZo88QXF+3Es=
-APP_DEBUG=true
-APP_URL=http://localhost:8000
+APP_DEBUG=false
+APP_URL=https://api.tursinakebab.id
 
 APP_LOCALE=en
 APP_FALLBACK_LOCALE=en
@@ -21,11 +21,11 @@ LOG_DEPRECATIONS_CHANNEL=null
 LOG_LEVEL=debug
 
 DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
+DB_HOST=api.tursinakena.id
 DB_PORT=3306
-DB_DATABASE=db_tursina
-DB_USERNAME=root
-DB_PASSWORD=
+DB_DATABASE=turk7385_db_tursina
+DB_USERNAME=turk7385_admin
+DB_PASSWORD= (VXkW7^rH07.y7oK
 
 SESSION_DRIVER=database
 SESSION_LIFETIME=120
